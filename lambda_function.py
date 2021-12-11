@@ -1,9 +1,30 @@
 import boto3
+import datetime
+import tweepy
 
 
 def lambda_handler(event, context):
     """Main Lambda function"""
-    return
+
+    api_key, api_secret, access_token, access_secret = get_twitter_keys()
+
+    auth = tweepy.OAuthHandler(api_key, api_secret)
+    auth.set_access_token(access_token, access_secret)
+    api = tweepy.API(auth)
+
+    next_year = datetime.datetime.now().year + 1
+    new_year = datetime.datetime(next_year, 1, 1, 0, 0, 0)
+    today = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
+    days_left = (new_year - today).days
+
+    if days_left == 1:
+        status = "Tomorrow is New Year's Day!"
+    elif today.month == 1 and today.day == 1:
+        status = f'Happy New Year!! Welcome to {today.year}! Only {days_left} until next year.'
+    else:
+        status = f'There are {days_left} until {next_year}'
+
+    api.update_status(status=status)
 
 
 def get_twitter_keys():
@@ -11,10 +32,21 @@ def get_twitter_keys():
     # Create our SSM Client.
     aws_client = boto3.client('ssm')
 
-    # Get our parameter
-    response = aws_client.get_parameter(
-        Name='example_secret',
+    # Get our keys.
+    parameters = aws_client.get_parameters(
+        Names=[
+            'example_secret'
+        ],
         WithDecryption=True
     )
 
-    return response['Parameter']['Value']
+    api_key = ''
+    api_secret = ''
+    access_token = ''
+    access_secret = ''
+
+    for parameter in parameters['Parameters']:
+        if parameter['Name'] == '':
+            api_key = parameter['Value']
+
+    return api_key, api_secret, access_token, access_secret
