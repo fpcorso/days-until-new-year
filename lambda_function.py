@@ -8,12 +8,15 @@ def lambda_handler(event, context):
 
     api_key, api_secret, access_token, access_secret = get_twitter_keys()
 
-    auth = tweepy.OAuthHandler(api_key, api_secret)
-    auth.set_access_token(access_token, access_secret)
-    api = tweepy.API(auth)
+    client = tweepy.Client(
+        consumer_key=api_key,
+        consumer_secret=api_secret,
+        access_token=access_token,
+        access_token_secret=access_secret
+    )
 
-    status = get_tweet()
-    api.update_status(status=status)
+    tweet = get_tweet()
+    client.create_tweet(text=tweet)
 
 
 def get_tweet():
