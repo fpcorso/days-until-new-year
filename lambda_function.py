@@ -47,7 +47,7 @@ def get_twitter_keys():
     # Get our keys from Parameter Store.
     parameters = aws_client.get_parameters(
         Names=[
-            'twitter_api_key'
+            'twitter_api_key',
             'twitter_api_secret',
             'twitter_access_token',
             'twitter_access_secret'
