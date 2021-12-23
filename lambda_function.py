@@ -6,20 +6,20 @@ import tweepy
 def lambda_handler(event, context):
     """Main Lambda function"""
 
-    api_key, api_secret, access_token, access_secret = get_twitter_keys()
+    keys = get_twitter_keys()
 
     client = tweepy.Client(
-        consumer_key=api_key,
-        consumer_secret=api_secret,
-        access_token=access_token,
-        access_token_secret=access_secret
+        consumer_key=keys.get('twitter_api_key'),
+        consumer_secret=keys.get('twitter_api_secret'),
+        access_token=keys.get('twitter_access_token'),
+        access_token_secret=keys.get('twitter_access_secret')
     )
 
     tweet = get_tweet()
     client.create_tweet(text=tweet)
 
 
-def get_tweet():
+def get_tweet() -> str:
     """Creates our tweet."""
 
     # Calculate days until new year's day.
@@ -39,7 +39,7 @@ def get_tweet():
     return tweet
 
 
-def get_twitter_keys():
+def get_twitter_keys() -> dict:
     """Retrieve secrets from Parameter Store."""
     # Create our SSM Client.
     aws_client = boto3.client('ssm')
@@ -55,20 +55,9 @@ def get_twitter_keys():
         WithDecryption=True
     )
 
-    api_key = ''
-    api_secret = ''
-    access_token = ''
-    access_secret = ''
-
-    # Cycle over the returned parameters and set the right value to each variable.
+    # Convert list of parameters into simpler dict.
+    keys = {}
     for parameter in parameters['Parameters']:
-        if parameter['Name'] == 'twitter_api_key':
-            api_key = parameter['Value']
-        if parameter['Name'] == 'twitter_api_secret':
-            api_secret = parameter['Value']
-        if parameter['Name'] == 'twitter_access_token':
-            access_token = parameter['Value']
-        if parameter['Name'] == 'twitter_access_secret':
-            access_secret = parameter['Value']
+        keys[parameter['Name']] = parameter['Value']
 
-    return api_key, api_secret, access_token, access_secret
+    return keys
